@@ -27,5 +27,7 @@ zhtoolUtil:{
     setCookie：设置cookie，
     delCookie：删除cookie，
     getCookie：获取cookie，
-    getDateall：获取详细时间
+    getDateall：获取详细时间,
+    removeNode:删除选中dom，
+    deleAllChildNodes：删除dom中的所有子元素，
 }

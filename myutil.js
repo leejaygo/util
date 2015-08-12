@@ -436,6 +436,20 @@ var zhtoolUtil = {
 
    	return wholetime;
    },
+   //删除一个dom
+   removeNode: function (node){
+   	  if(node){
+   	  	  node.parentNode.removeChild(node);
+   	  }
+   },
+   //删除dom的所有子元素
+   deleAllChildNodes: function (node){
+   	  if(node){
+   	  	while(node.hasChildNodes()){
+   	  		node.removeChild(node.firstChild);
+   	  	}
+   	  }
+   }
 }
 
 
