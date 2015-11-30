@@ -179,6 +179,17 @@ var zhtoolUtil = {
 			return false;
 		}
 	},
+
+	/**
+	 * [getType 获取对象的类型]
+	 * @param  {[type]} o [任何类型的值]
+	 * @return {[type]}   [number，string，array，function，object，date，regexp，boolean字符串]
+	 */
+	getType: function(o){
+    	var _t;
+    	return ((_t = typeof(o)) == "object" ? o ===null && "null" || Object.prototype.toString.call(o).slice(8,-1):_t).toLowerCase();
+    },
+
 	//判断一个是否为数组
 	isArray: function(arr) {
 		return Object.prototype.toString.call(arr) === '[object Array]';
@@ -226,6 +237,24 @@ var zhtoolUtil = {
 
 			ele["on" + evtType] = handle;
 		}
+		//如果是mousewheel事件要加上下面的判断
+		// if (evtType == 'mousewheel' && this.getIEVersion() === 0) { //对于mousewheel事件单独处理
+		// 	ele.addEventListener("DOMMouseScroll", func, false);
+		// }
+	},
+
+	/**
+	 * [getIEVersion 获取IE的版本号，如果不是IE就返回0]
+	 * @return {[type]} [description]
+	 */
+	getIEVersion: function(){
+		var userAgent = window.navigator.userAgent.toLowerCase();
+	    //if(/msie 10\.0/i.test(userAgent)) return 10;
+	    //if(/msie 9\.0/i.test(userAgent)) return 9;
+	    if(/msie 8\.0/i.test(userAgent)) return 8;
+	    if(/msie 7\.0/i.test(userAgent)) return 7;
+	    if(/msie 6\.0/i.test(userAgent)) return 6;
+	    return 0;
 	},
 
 	//移除DOM上绑定的元素
@@ -246,25 +275,26 @@ var zhtoolUtil = {
 	},
 
 	//对象深拷贝
-	cloneObj: function(obj) {
-		if (typeof obj != "object") {
-			return obj;
+	cloneObj: function (obj) {
+		var newobj, s;
+		if (typeof obj !== 'object') {
+			return;
 		}
-		var s = {};
-		if (obj.constructor == Array) {
-			s = [];
+		newobj = obj.constructor === Object ? {} : [];
+		if (window.JSON) {
+			s = JSON.stringify(obj), //序列化对象
+			newobj = JSON.parse(s);
+			//反序列化（还原）
+		} else {
+			if (newobj.constructor === Array) {
+				newobj.concat(obj);
+			} else {
+				for (var i in obj) {
+					newobj[i] = obj[i];
+				}
+			}
 		}
-		for (var i in obj) {
-			s[i] = toolUtil.cloneObj(obj[i]);
-		}
-		return s;
-	},
-
-	//对象拷贝
-	cloneobj2: function(obj) {
-		var tmp = JSON.stringify(obj);
-		var obj = JSON.parse(tmp);
-		return obj;
+		return newobj;
 	},
 
 	//函数:判断键盘是否按下Ctrl按键
@@ -308,13 +338,13 @@ var zhtoolUtil = {
 		}
 		return false;
 	},
-	//延迟加载脚本
-	/*
-	 * 参数说明
-	 * 1、加载脚本的url
-	 * 2、加载完成后的回调函数（可选）
-	 * 该函数只有在没有同名脚本被加载时才加载上新脚本
-	 **/
+
+	/**
+	 * [loadScript 动态加载脚本]
+	 * @param  {[String]}   url      [脚本的url]
+	 * @param  {Function} callback [加载成功后的回调函数]
+	 * @return {[type]}            [description]
+	 */
 	loadScript: function(url, callback) {
 		var sts = document.getElementsByTagName('script');
 		for (var i = 0, l = sts.length; i < l; i++) {
@@ -347,12 +377,12 @@ var zhtoolUtil = {
 		document.body.appendChild(st);
 	},
 
-	/*
-	 *设置cookie
-	 *  参数说明
-	 *
-	 *
-	 ***/
+	/**
+	 * [setCookie 设置cookie]
+	 * @param {[String]} name  [键名]
+	 * @param {[String]} value [值]
+	 * @param {[String]} days  [过期时间]
+	 */
 	setCookie: function(name, value, days) {
 		toolUtil.delCookie(name);
 		if (days) {
@@ -364,12 +394,12 @@ var zhtoolUtil = {
 		date.setTime(date.getTime() + days * 24 * 3600 * 1000);
 		document.cookie = name + "=" + escape(value) + ";expires=" + date.toGMTString();
 	},
-	/*
-	 *删除cookie
-	 * 参数说明
-	 * 1、cookie的key名
-	 *
-	 *********/
+	
+	/**
+	 * [delCookie 删除特定cookie]
+	 * @param  {[String]} name [删除特定键名的cookie]
+	 * @return {[type]}      [description]
+	 */
 	delCookie: function(name) {
 		var date = new Date();
 		date.setTime(date.getTime() - 10);
@@ -380,11 +410,11 @@ var zhtoolUtil = {
 			document.cookie = name + "=" + val + ";expires=" + date.toGMTString();
 		}
 	},
-	/*
-	 *获取单个cookie的值
-	 *  1、cookie的键值
-	 *
-	 ***/
+	/**
+	 * [getCookie 获取单个cookie的值]
+	 * @param  {[String]} name [要获取cookie值的键名]
+	 * @return {[type]}      [description]
+	 */
 	getCookie: function(name) {
 		var tmp = document.cookie.split(";");
 		for (var i = 0, l = tmp.length; i < l; i++) {
@@ -393,12 +423,15 @@ var zhtoolUtil = {
 				if (arr.length > 1)
 					return unescape(arr[1]);
 			} else {
-				return ""
+				return "";
 			}
 		}
 		return "";
 	},
-
+	/**
+	 * [getDateall 获取中文格式的年月日时分秒]
+	 * @return {[type]} [description]
+	 */
 	getDateall: function() {
 		var mydate = new Date();
 
@@ -436,13 +469,22 @@ var zhtoolUtil = {
 
 		return wholetime;
 	},
-	//删除一个dom
+	/**
+	 * [removeNode 删除该节点]
+	 * @param  {[Object]} node [要删除的节点]
+	 * @return {[type]}      [description]
+	 */
 	removeNode: function(node) {
 		if (node) {
 			node.parentNode.removeChild(node);
 		}
 	},
-	//删除dom的所有子元素
+
+	/**
+	 * [deleAllChildNodes 删除该类名后的所有子元素]
+	 * @param  {[Object]} node [要删除该节点下的所有子节点]
+	 * @return {[type]}      [description]
+	 */
 	deleAllChildNodes: function(node) {
 		if (node) {
 			while (node.hasChildNodes()) {
@@ -451,6 +493,28 @@ var zhtoolUtil = {
 		}
 	},
 
+	/**
+	 * [_hasClass 判断标签中是否有该class值]
+	 * @param  {[Object]}  ele     [判断的元素]
+	 * @param  {[string]}  clsName [元素中要判读是否存在的类名]
+	 * @return {Boolean}         [是否存在]
+	 */
+	_hasClass: function(ele, clsName) {
+		var _existcls = ele.className;
+		var _acls = _existcls.split(" ");
+		for (var i = 0, len = _acls.length; i < len; i++) {
+			if (_acls[i] === clsName) {
+				return true;
+			}
+		}
+		return false;
+	},
+
+	/**
+	 * [_addClass 在元素中添加类名]
+	 * @param {[Object]} ele     [要添加类名的元素]
+	 * @param {[String]} clsName [要添加的类名字符串]
+	 */
 	_addClass: function(ele, clsName) {
 		var _existcls = ele.className;
 		var _acls = _existcls.split(" ");
@@ -467,7 +531,12 @@ var zhtoolUtil = {
 
 		ele.className = _existcls;
 	},
-
+	/**
+	 * [_removeClass 删除元素中存在的该类名字符串]
+	 * @param  {[Object]} ele     [要删除特定类名元素]
+	 * @param  {[String]} clsName [要删除类名的字符串]
+	 * @return {[type]}         [description]
+	 */
 	_removeClass: function(ele, clsName) {
 		var _existcls = ele.className;
 		var _acls = _existcls.split(" ");
@@ -481,14 +550,165 @@ var zhtoolUtil = {
 		ele.className = optcls;
 	},
 
-	_hasClass: function(ele, clsName) {
-		var _existcls = ele.className;
-		var _acls = _existcls.split(" ");
-		for (var i = 0, len = _acls.length; i < len; i++) {
-			if (_acls[i] === clsName) {
-				return true;
+	/**
+	 * [getEleStyle 获取元素该样式的值]
+	 * @param  {[Object]} obj       [元素]
+	 * @param  {[String]} attribute [要获取的样式，如left，right等]
+	 * @return {[String]}           [要获取的样式的值]
+	 */
+	getEleStyle: function (obj, attribute) {
+		// 返回最终样式函数，兼容IE和DOM，设置参数：元素对象、样式特性
+		var arr = attribute.split('-');
+		var attr = arr[0];
+		if (attr.length > 1) {
+			for (var i = 1; i < arr.length; i++) {
+				attr += arr[i].substring(0, 1).toUpperCase() + arr[i].substring(1);
+				//除第一个单词外，其余单词首字母转为大写，并拼接起来
+			}
+		} else {
+			attr = attribute;
+		}
+		return obj.currentStyle ? obj.currentStyle[attr] : document.defaultView.getComputedStyle(obj, false)[attr];
+	},
+
+	/**
+	 * [ajax 原生Ajax请求]
+	 * @param  {[String]}   method      [请求的方法，get，post]
+	 * @param  {[String]}   url         [请求的服务器url]
+	 * @param  {[Object]}   data        [json格式的键值对请求参数]
+	 * @param  {[Boolean]}   async       [同步或者异步请求]
+	 * @param  {Function} callback    [请求成功的回调]
+	 * @param  {[Function]}   timoutFunc  [超时的回到函数]
+	 * @param  {[Number]}   timeout     [请求超时的时间]
+	 * @param  {[String]}   otherParams [可选，一般没用]
+	 * @return {[type]}               [description]
+	 */
+	ajax: function (method, url, data, async, callback,timoutFunc,timeout,otherParams) {
+		var timer_out;//设置超时id
+		var parames_len=arguments.length;
+		if(arguments.length==7||arguments.length==8){
+			//创建计时器
+			timer_out=setTimeout(function(){
+				if (xdr){  
+	                xdr.abort(); 
+	            }else if(xhr){
+	            	//alert(typeof xhr);
+	            	alert(xhr);
+	            	xhr.abort(); 
+	            }
+				timoutFunc();
+			},timeout);  
+		}
+		var xhr = null;
+		var xdr = null;
+		if (data instanceof Object) {  
+			var str = "";
+			for (k in data) { 
+				str += k + "=" + encodeURIComponent(data[k]) + "&";
+				//str += k + "=" + escape(data[k]) + "&";
+			}
+			data = str;   
+		}
+		if (window.XDomainRequest) {
+			xdr = new XDomainRequest();
+			if (xdr) {
+				xdr.onerror = showerr;
+				xdr.onload = function () {
+					if (timer_out){  
+	                   clearTimeout(timer_out);  
+	                }
+	                if(arguments.length==8){
+	                    callback(xdr.responseText,otherParams);
+	                }else{
+	                	callback(xdr.responseText);
+	                }
+					
+				};
+				if ("get" == method.toLowerCase()) {
+					if (data == null || data == "") {
+						xdr.open("get", url);
+					} else {
+						xdr.open("get", url + "?" + data);
+					}
+					xdr.send();
+				} else if ("post" == method.toLowerCase()) {
+					xdr.open("post", url);
+					xdr.setRequestHeader("content-Type", "application/x-www-form-urlencoded");
+					xdr.send(data);
+				}
+			}
+		} else {
+			if (window.XMLHttpRequest) {
+				xhr = new XMLHttpRequest();
+			} else if (window.ActiveXObject) {
+				xhr = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+
+			xhr.onreadystatechange = function (e) {
+				if (4 == xhr.readyState) {
+					if (200 == xhr.status) { 
+						if (callback) {
+							if (timer_out){
+	                           clearTimeout(timer_out);  
+	                        }
+	                        if(parames_len==8){
+	                            callback(xhr.responseText,otherParams);
+	                        }else{
+	                        	callback(xhr.responseText);
+	                        }
+						}
+					} else if (404 == xhr.status) {
+						if (hander404) {
+							hander404();
+						}
+					} else if (500 == xhr.status) {
+						if (hander500) {
+							hander500();
+						}
+					}
+				}
+			}
+
+			if ("get" == method.toLowerCase()) {
+				if (data == null || data == "") {
+					xhr.open("get", url, async);
+				} else {
+					xhr.open("get", url + "?" + data, async);
+				}
+				xhr.send(null);
+			} else if ("post" == method.toLowerCase()) {
+				xhr.open("post", url, async);
+				xhr.setRequestHeader("content-Type", "application/x-www-form-urlencoded");
+				xhr.send(data);
 			}
 		}
-		return false;
+		function handler404() {
+			alert("ReqUrl：not found");
+		}
+
+		function handler500() {
+			alert("服务器错误，请稍后再试");
+		}
+
+		function showerr(e){
+
+		}
+	},
+	/**
+	 * [insertAfter_cust 在元素后面插入一个元素]
+	 * @param  {[Object]} newElement    [要插入的元素]
+	 * @param  {[Object]} targetElement [被插入的元素]
+	 * @return {[type]}               [description]
+	 */
+	insertAfter_cust: function (newElement,targetElement){
+	    var parent = targetElement.parentNode;  
+	    if(parent.lastChild == targetElement){  
+	        parent.appendChild(newElement);  
+	      }else{  
+	        parent.insertBefore(newElement,targetElement.nextSibling);  
+	      }  
 	}
+	
+
+
 };
